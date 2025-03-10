@@ -2,6 +2,8 @@ import './style.css'
 import javascriptLogo from './javascript.svg'
 import viteLogo from '/vite.svg'
 import { setupCounter } from './counter.js'
+import { three_render } from './three_canvas.js'
+
 
 document.querySelector('#app').innerHTML = `
   <div>
@@ -20,5 +22,5 @@ document.querySelector('#app').innerHTML = `
     </p>
   </div>
 `
-
+three_render();
 setupCounter(document.querySelector('#counter'))
