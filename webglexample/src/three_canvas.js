@@ -8,7 +8,11 @@ export function three_render(){
     const controls = new OrbitControls(camera, document.body); 
 
     const renderer = new THREE.WebGLRenderer();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    //renderer.setSize(window.innerWidth, window.innerHeight);
+    
+    onResize();
+    window.addEventListener('resize', onResize);
+
     document.body.appendChild(renderer.domElement);
     renderer.setAnimationLoop( animate );
     document.body.appendChild( renderer.domElement );
@@ -38,5 +42,16 @@ export function three_render(){
 
         renderer.render( scene, camera );
 
+    }
+
+    function onResize(){
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(width, height);
+
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
     }
 }
