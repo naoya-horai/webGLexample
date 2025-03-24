@@ -36,6 +36,16 @@ h1 {
   line-height: 1.1;
 }
 
+canvas { display: block; }
+
+/* UIを配置するためのスタイル */
+.ui-container {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 10;
+}
+
 .logo {
   height: 6em;
   padding: 1.5em;
