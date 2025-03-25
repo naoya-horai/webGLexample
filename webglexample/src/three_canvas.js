@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { RGBELoader} from 'three/examples/jsm/loaders/RGBELoader.js';
 
 export function three_render(){
     const scene = new THREE.Scene();
@@ -18,9 +19,17 @@ export function three_render(){
     document.body.appendChild( renderer.domElement );
 
     const loader = new GLTFLoader();
+    let mixer = null;
 
     loader.load('monkey.glb', function ( gltf ) {
         scene.add( gltf.scene );
+
+        if (gltf.animations && gltf.animations.length) {
+            mixer = new THREE.AnimationMixer(gltf.scene);
+            gltf.animations.forEach((clip) => {
+                mixer.clipAction(clip).play(); // アニメーションを再生
+            });
+        }
     }, undefined, function( error ) {
         console.error( error );
     } );
@@ -30,8 +39,19 @@ export function three_render(){
     //const cube = new THREE.Mesh( geometry, material );
     //scene.add( cube );
 
-    const light = new THREE.DirectionalLight(0xFFFFFF, 2)
-    scene.add( light );
+    const ambientLight = new THREE.DirectionalLight(0xffffff, 0.6); // 太陽光
+    scene.add(ambientLight);
+    const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x4169e1, 0.4);
+    scene.add(hemisphereLight);
+
+    // 背景の設定
+    scene.background = new THREE.Color(0xccffff);
+
+    new RGBELoader().load('golden_gate_hills_2k.hdr', function(texture) {
+        texture.mapping = THREE.EquirectangularReflectionMapping;
+        scene.background = texture;
+        scene.environment = texture;
+    });
 
     camera.position.z = 5;
 
@@ -39,7 +59,9 @@ export function three_render(){
 
         //cube.rotation.x += 0.01;
         //cube.rotation.y += 0.01;
-
+        if (mixer) {
+            mixer.update(0.01); // アニメーションを更新（時間を進める）
+        }
         renderer.render( scene, camera );
 
     }
@@ -54,4 +76,44 @@ export function three_render(){
         camera.aspect = width / height;
         camera.updateProjectionMatrix();
     }
+
+    const dropZone = document.body; // ドラッグアンドドロップ対象
+
+    dropZone.addEventListener('dragover', (event) => {
+        event.preventDefault();
+    });
+
+    dropZone.addEventListener('drop', (event) => {
+        event.preventDefault();
+        const file = event.dataTransfer.files[0];
+
+        // GLTFファイル以外は無視
+        //if (file.type !== 'application/json' && file.type !== 'model/gltf+json') {
+        //    console.log("GLTFファイルではありません");
+        //    return;
+        //}
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const arrayBuffer = e.target.result;
+            const blob = new Blob([arrayBuffer], { type: 'application/octet-stream' });
+            const url = URL.createObjectURL(blob);
+
+            // 新しいGLTFモデルを読み込んでシーンに追加
+            loader.load(url, function (gltf) {
+                // もし現在シーンにモデルがあれば削除
+                if (currentModel) {
+                    scene.remove(currentModel);
+                }
+
+                // 新しいモデルをシーンに追加
+                scene.add(gltf.scene);
+                currentModel = gltf.scene;
+            }, undefined, function (error) {
+                console.error(error);
+            });
+        };
+
+        reader.readAsArrayBuffer(file);
+    });
 }
