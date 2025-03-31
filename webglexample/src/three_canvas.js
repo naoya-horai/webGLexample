@@ -20,16 +20,24 @@ export function three_render(){
 
     const loader = new GLTFLoader();
     let mixer = null;
+    let animations = [];
+    let currentAction = null;
 
     loader.load('monkey.glb', function ( gltf ) {
         scene.add( gltf.scene );
-
+        animations = gltf.animations;
+        
         if (gltf.animations && gltf.animations.length) {
+            
             mixer = new THREE.AnimationMixer(gltf.scene);
-            gltf.animations.forEach((clip) => {
-                mixer.clipAction(clip).play(); // アニメーションを再生
-            });
+            mixer.stopAllAction();
+            const anime = mixer.clipAction(animations[0]);
+            //anime.setLoop(THREE.LoopOnce)
+            anime.clampWhenFinished = true
+        
+            anime.play();
         }
+        
     }, undefined, function( error ) {
         console.error( error );
     } );
@@ -116,4 +124,5 @@ export function three_render(){
 
         reader.readAsArrayBuffer(file);
     });
+    
 }
